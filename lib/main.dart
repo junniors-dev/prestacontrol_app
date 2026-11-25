@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'config/servidor.dart';
+import 'config/tema.dart';
 import 'screens/login_screen.dart';
 import 'screens/prestamos_screen.dart';
 import 'services/sesion_global.dart';
@@ -35,11 +36,7 @@ class PrestaControlApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
       scaffoldMessengerKey: mensajeroKey,
-      theme: ThemeData(
-        // Azul del logo PrestaL&J
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1A7FC1)),
-        useMaterial3: true,
-      ),
+      theme: temaPrestaLJ(),
       locale: const Locale('es', 'PE'),
       supportedLocales: const [Locale('es', 'PE'), Locale('es')],
       localizationsDelegates: const [

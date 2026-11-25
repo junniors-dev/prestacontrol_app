@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../config/servidor.dart';
+import '../config/tema.dart';
 import '../models/prestamo.dart';
 import '../models/resumen.dart';
 import '../models/sesion.dart';
@@ -106,14 +107,13 @@ class _PrestamosScreenState extends State<PrestamosScreen> {
     final confirmar = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        icon: const Icon(Icons.delete_forever),
         title: const Text('¿Anular préstamo?'),
         content: Text('Se eliminará el préstamo de ${p.cliente} por ${soles(p.monto)}. '
             'Úsalo solo si se registró por error.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Theme.of(ctx).colorScheme.error),
+            style: FilledButton.styleFrom(backgroundColor: Paleta.vencido, minimumSize: const Size(0, 44)),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Anular'),
           ),
@@ -138,7 +138,11 @@ class _PrestamosScreenState extends State<PrestamosScreen> {
         content: const Text('Se borrará el token guardado en este celular.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Cerrar sesión')),
+          FilledButton(
+            style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Cerrar sesión'),
+          ),
         ],
       ),
     );
@@ -150,31 +154,28 @@ class _PrestamosScreenState extends State<PrestamosScreen> {
     final porCobrar = _filtrar(false);
     final cobrados = _filtrar(true);
     final morosos = porCobrar.where((p) => p.vencido).length;
+    final nombre = widget.sesion.nombre.split(' ').first;
 
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
+          titleSpacing: 20,
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('PrestaL&J', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('PrestaL&J'),
               Text(
-                '${widget.sesion.nombre} · ${ServidorConfig.nombre(ServidorConfig.modo)}',
-                style: Theme.of(context).textTheme.bodySmall,
+                'Hola, $nombre · ${ServidorConfig.nombre(ServidorConfig.modo)}',
+                style: const TextStyle(fontSize: 13, color: Paleta.suave, fontWeight: FontWeight.w400),
               ),
             ],
           ),
           actions: [
             IconButton(tooltip: 'Actualizar', onPressed: _cargando ? null : _cargar, icon: const Icon(Icons.refresh)),
             IconButton(tooltip: 'Cerrar sesión', onPressed: _salir, icon: const Icon(Icons.logout)),
+            const SizedBox(width: 4),
           ],
-          bottom: TabBar(
-            tabs: [
-              Tab(text: 'Por cobrar (${porCobrar.length})'),
-              Tab(text: 'Cobrados (${cobrados.length})'),
-            ],
-          ),
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () => _abrirFormulario(),
@@ -184,9 +185,9 @@ class _PrestamosScreenState extends State<PrestamosScreen> {
         body: Column(
           children: [
             _AvisoExpiracion(sesion: widget.sesion, avisarAntesDe: _avisarAntesDe),
-            if (_resumen != null) _TarjetaResumen(resumen: _resumen!),
+            if (_resumen != null) _TarjetaResumen(resumen: _resumen!, morosos: morosos),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: TextField(
                 controller: _buscador,
                 onChanged: (v) => setState(() => _busqueda = v),
@@ -194,11 +195,11 @@ class _PrestamosScreenState extends State<PrestamosScreen> {
                   hintText: 'Buscar por nombre o DNI',
                   prefixIcon: const Icon(Icons.search),
                   isDense: true,
-                  border: const OutlineInputBorder(),
                   suffixIcon: _busqueda.isEmpty
                       ? null
                       : IconButton(
-                          icon: const Icon(Icons.clear),
+                          tooltip: 'Limpiar búsqueda',
+                          icon: const Icon(Icons.close),
                           onPressed: () => setState(() {
                             _buscador.clear();
                             _busqueda = '';
@@ -207,24 +208,18 @@ class _PrestamosScreenState extends State<PrestamosScreen> {
                 ),
               ),
             ),
-            if (morosos > 0)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Icon(Icons.warning_amber_rounded, size: 18, color: Colors.red.shade700),
-                    const SizedBox(width: 6),
-                    Text('$morosos préstamo(s) vencido(s) sin cobrar',
-                        style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ),
-            if (_cargando) const LinearProgressIndicator(),
+            TabBar(
+              tabs: [
+                Tab(text: 'Por cobrar · ${porCobrar.length}'),
+                Tab(text: 'Cobrados · ${cobrados.length}'),
+              ],
+            ),
+            if (_cargando) const LinearProgressIndicator(minHeight: 2) else const SizedBox(height: 2),
             Expanded(
               child: TabBarView(
                 children: [
-                  _lista(porCobrar, vacio: 'No tienes préstamos por cobrar'),
-                  _lista(cobrados, vacio: 'Aún no hay préstamos cobrados'),
+                  _lista(porCobrar, vacio: 'No tienes préstamos por cobrar.\nRegistra uno con "Nuevo préstamo".'),
+                  _lista(cobrados, vacio: 'Aún no hay préstamos cobrados.'),
                 ],
               ),
             ),
@@ -240,28 +235,29 @@ class _PrestamosScreenState extends State<PrestamosScreen> {
       child: items.isEmpty
           ? ListView(
               physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 32),
               children: [
-                const SizedBox(height: 80),
-                Icon(Icons.inbox_outlined, size: 56, color: Theme.of(context).colorScheme.outline),
-                const SizedBox(height: 8),
-                Center(
-                  child: Text(
-                    _cargando
-                        ? 'Cargando…'
-                        : _errorCarga != null
-                            ? 'No se pudo cargar. Desliza hacia abajo para reintentar.'
-                            : _busqueda.isNotEmpty
-                                ? 'Sin resultados para "$_busqueda"'
-                                : vacio,
-                    textAlign: TextAlign.center,
-                  ),
+                const SizedBox(height: 64),
+                const Icon(Icons.receipt_long_outlined, size: 44, color: Paleta.borde),
+                const SizedBox(height: 12),
+                Text(
+                  _cargando
+                      ? 'Cargando…'
+                      : _errorCarga != null
+                          ? 'No se pudo cargar la cartera.\nDesliza hacia abajo para reintentar.'
+                          : _busqueda.isNotEmpty
+                              ? 'Nadie coincide con "$_busqueda".'
+                              : vacio,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Paleta.suave, height: 1.4),
                 ),
               ],
             )
-          : ListView.builder(
+          : ListView.separated(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
               itemCount: items.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (_, i) => _TarjetaPrestamo(
                 prestamo: items[i],
                 onEditar: () => _abrirFormulario(items[i]),
@@ -285,60 +281,126 @@ class _AvisoExpiracion extends StatelessWidget {
     final queda = sesion.tiempoRestante;
     if (sesion.expira == null || queda > avisarAntesDe) return const SizedBox.shrink();
     final minutos = queda.inMinutes;
-    return MaterialBanner(
-      backgroundColor: Colors.amber.shade100,
-      leading: const Icon(Icons.timer_outlined, color: Colors.black87),
-      content: Text(
-        minutos >= 1
-            ? 'Tu sesión vence en $minutos min. Guarda tus cambios y vuelve a iniciar sesión.'
-            : 'Tu sesión vence en menos de un minuto.',
-        style: const TextStyle(color: Colors.black87),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      padding: const EdgeInsets.fromLTRB(14, 6, 6, 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF4E0),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Paleta.naranja.withValues(alpha: 0.5)),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => cerrarSesion(motivo: 'Inicia sesión de nuevo para renovar tu token'),
-          child: const Text('Renovar'),
-        ),
-      ],
+      child: Row(
+        children: [
+          const Icon(Icons.timer_outlined, color: Paleta.naranjaTexto, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              minutos >= 1 ? 'Tu sesión vence en $minutos min.' : 'Tu sesión vence en menos de un minuto.',
+              style: const TextStyle(color: Paleta.tinta),
+            ),
+          ),
+          TextButton(
+            onPressed: () => cerrarSesion(motivo: 'Inicia sesión de nuevo para renovar tu token'),
+            child: const Text('Renovar'),
+          ),
+        ],
+      ),
     );
   }
 }
 
-/// Reto complementario: capital prestado, total por cobrar y ganancia esperada.
+/// Reto complementario: lo que falta cobrar, el capital prestado y la ganancia esperada.
 class _TarjetaResumen extends StatelessWidget {
   final Resumen resumen;
+  final int morosos;
 
-  const _TarjetaResumen({required this.resumen});
+  const _TarjetaResumen({required this.resumen, required this.morosos});
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    Widget dato(String titulo, String valor, {Color? color}) => Expanded(
+    const etiqueta = TextStyle(color: Color(0xFFB8C3DC), fontSize: 12.5);
+    Widget dato(String titulo, String valor, {Color color = Colors.white}) => Expanded(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(titulo, style: TextStyle(fontSize: 12, color: cs.onPrimaryContainer)),
+              Text(titulo, style: etiqueta),
               const SizedBox(height: 2),
               FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
                 child: Text(valor,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color ?? cs.onPrimaryContainer)),
+                    style: TextStyle(
+                        color: color, fontSize: 16, fontWeight: FontWeight.w600, fontFeatures: cifras)),
               ),
             ],
           ),
         );
-    return Card(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      color: cs.primaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-        child: Row(
-          children: [
-            dato('Capital prestado', soles(resumen.capitalPrestado)),
-            dato('Por cobrar', soles(resumen.totalPorCobrar)),
-            dato('Ganancia', soles(resumen.gananciaEsperada), color: Colors.green.shade800),
-          ],
-        ),
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+      decoration: BoxDecoration(color: Paleta.tinta, borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text('Por cobrar', style: etiqueta),
+              const Spacer(),
+              if (morosos > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: Paleta.vencido, borderRadius: BorderRadius.circular(20)),
+                  child: Text(
+                    morosos == 1 ? '1 vencido' : '$morosos vencidos',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              soles(resumen.totalPorCobrar),
+              style: const TextStyle(
+                  color: Colors.white, fontSize: 30, fontWeight: FontWeight.w700, fontFeatures: cifras),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(height: 1, color: Colors.white.withValues(alpha: 0.12)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              dato('Capital prestado', soles(resumen.capitalPrestado)),
+              dato('Ganancia esperada', soles(resumen.gananciaEsperada), color: Paleta.naranja),
+            ],
+          ),
+        ],
       ),
     );
+  }
+}
+
+/// Estado de un préstamo según su fecha de vencimiento.
+class _Estado {
+  final Color color;
+  final Color fondo;
+  final String texto;
+
+  const _Estado(this.color, this.fondo, this.texto);
+
+  factory _Estado.de(Prestamo p) {
+    if (p.pagado) return const _Estado(Paleta.cobrado, Color(0xFFE6F2EC), 'Cobrado');
+    final dias = soloFecha(p.fechaVencimiento).difference(soloFecha(DateTime.now())).inDays;
+    if (dias < 0) {
+      return _Estado(Paleta.vencido, const Color(0xFFFCE8E8),
+          dias == -1 ? 'Venció ayer' : 'Venció hace ${-dias} días');
+    }
+    final texto = switch (dias) { 0 => 'Vence hoy', 1 => 'Vence mañana', _ => 'Vence en $dias días' };
+    if (dias <= 3) return _Estado(Paleta.naranjaTexto, const Color(0xFFFFF4E0), texto);
+    return _Estado(Paleta.azul, const Color(0xFFE8EFF8), texto);
   }
 }
 
@@ -358,69 +420,77 @@ class _TarjetaPrestamo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = prestamo;
-    final tema = Theme.of(context);
-    final rojo = Colors.red.shade700;
+    final estado = _Estado.de(p);
 
     return Card(
       // Morosos resaltados en rojo
-      color: p.vencido ? Colors.red.shade50 : null,
-      shape: p.vencido
-          ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: rojo, width: 1.5))
-          : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: p.vencido ? Paleta.vencido : Paleta.borde, width: p.vencido ? 1.4 : 1),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
         onTap: onEditar,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 4, 12),
+        child: IntrinsicHeight(
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
+              // Talón con la fecha de vencimiento
+              Container(
+                width: 64,
+                color: estado.fondo,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(p.cliente,
-                              overflow: TextOverflow.ellipsis,
-                              style: tema.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold, color: p.vencido ? rojo : Colors.black87)),
-                        ),
-                        if (p.vencido) ...[
-                          const SizedBox(width: 6),
-                          _Etiqueta(texto: 'VENCIDO', color: rojo),
-                        ],
-                        if (p.pagado) ...[
-                          const SizedBox(width: 6),
-                          _Etiqueta(texto: 'COBRADO', color: Colors.green.shade700),
-                        ],
-                      ],
-                    ),
-                    Text('DNI ${p.dni}', style: tema.textTheme.bodySmall),
-                    const SizedBox(height: 6),
-                    Text('Monto ${soles(p.monto)} · Interés ${porcentaje(p.interes)}',
-                        style: const TextStyle(color: Colors.black87)),
-                    Text('Total a cobrar: ${soles(p.totalACobrar)}',
-                        style: tema.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: Colors.black87)),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(Icons.event, size: 16, color: p.vencido ? rojo : tema.colorScheme.outline),
-                        const SizedBox(width: 4),
-                        Text('Vence ${fecha(p.fechaVencimiento)}',
-                            style: TextStyle(
-                                color: p.vencido ? rojo : Colors.black54,
-                                fontWeight: p.vencido ? FontWeight.w600 : FontWeight.normal)),
-                        Text('  ·  Prestado ${fecha(p.fechaPrestamo)}',
-                            style: const TextStyle(color: Colors.black45, fontSize: 12)),
-                      ],
-                    ),
+                    Text('${p.fechaVencimiento.day}',
+                        style: TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.w700, color: estado.color, fontFeatures: cifras)),
+                    Text(mesCorto(p.fechaVencimiento),
+                        style: TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w600, color: estado.color, letterSpacing: 1)),
                   ],
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 0, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(p.cliente,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.w700, color: Paleta.tinta)),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(soles(p.totalACobrar),
+                              style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: Paleta.tinta,
+                                  fontFeatures: cifras)),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'DNI ${p.dni} · ${soles(p.monto)} al ${porcentaje(p.interes)}',
+                        style: const TextStyle(fontSize: 13, color: Paleta.suave, fontFeatures: cifras),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(estado.texto,
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: estado.color)),
+                    ],
+                  ),
                 ),
               ),
               PopupMenuButton<String>(
                 tooltip: 'Acciones',
+                icon: const Icon(Icons.more_vert, color: Paleta.suave),
                 onSelected: (v) => switch (v) {
                   'pago' => onCambiarPago(),
                   'editar' => onEditar(),
@@ -440,7 +510,10 @@ class _TarjetaPrestamo extends StatelessWidget {
                   ),
                   const PopupMenuItem(
                     value: 'anular',
-                    child: ListTile(leading: Icon(Icons.delete_outline), title: Text('Anular')),
+                    child: ListTile(
+                      leading: Icon(Icons.delete_outline, color: Paleta.vencido),
+                      title: Text('Anular', style: TextStyle(color: Paleta.vencido)),
+                    ),
                   ),
                 ],
               ),
@@ -450,18 +523,4 @@ class _TarjetaPrestamo extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Etiqueta extends StatelessWidget {
-  final String texto;
-  final Color color;
-
-  const _Etiqueta({required this.texto, required this.color});
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(6)),
-        child: Text(texto, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-      );
 }

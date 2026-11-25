@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../config/tema.dart';
 import '../models/prestamo.dart';
 import '../services/prestamo_service.dart';
 import '../services/sesion_global.dart';
@@ -117,7 +118,6 @@ class _PrestamoFormScreenState extends State<PrestamoFormScreen> {
                 labelText: 'Cliente',
                 hintText: 'Persona que recibe el dinero',
                 prefixIcon: Icon(Icons.person_outline),
-                border: OutlineInputBorder(),
               ),
               validator: (v) => (v == null || v.trim().isEmpty) ? 'El cliente es obligatorio' : null,
             ),
@@ -130,7 +130,6 @@ class _PrestamoFormScreenState extends State<PrestamoFormScreen> {
               decoration: const InputDecoration(
                 labelText: 'DNI',
                 prefixIcon: Icon(Icons.badge_outlined),
-                border: OutlineInputBorder(),
               ),
               validator: (v) => RegExp(r'^\d{8}$').hasMatch(v ?? '') ? null : 'El DNI debe tener 8 dígitos',
             ),
@@ -147,7 +146,6 @@ class _PrestamoFormScreenState extends State<PrestamoFormScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Monto',
                       prefixText: 'S/ ',
-                      border: OutlineInputBorder(),
                     ),
                     validator: (v) {
                       final n = _num(v ?? '');
@@ -169,7 +167,6 @@ class _PrestamoFormScreenState extends State<PrestamoFormScreen> {
                     decoration: const InputDecoration(
                       labelText: 'Interés',
                       suffixText: '%',
-                      border: OutlineInputBorder(),
                     ),
                     validator: (v) {
                       final n = _num(v ?? '');
@@ -190,11 +187,24 @@ class _PrestamoFormScreenState extends State<PrestamoFormScreen> {
                 decoration: InputDecoration(
                   labelText: 'Fecha de vencimiento',
                   prefixIcon: const Icon(Icons.event),
-                  border: const OutlineInputBorder(),
                   errorText: sinFecha && _intentoGuardar ? 'Elige la fecha de vencimiento' : null,
                 ),
                 child: Text(sinFecha ? 'Toca para elegir' : fecha(_vencimiento!)),
               ),
+            ),
+            const SizedBox(height: 10),
+            // Atajos: plazos habituales contados desde la fecha del préstamo
+            Wrap(
+              spacing: 8,
+              children: [
+                for (final (texto, dias) in const [('En 1 semana', 7), ('En 15 días', 15), ('En 1 mes', 30)])
+                  ChoiceChip(
+                    label: Text(texto),
+                    selected: _vencimiento != null &&
+                        soloFecha(_vencimiento!) == _minimaFecha.add(Duration(days: dias)),
+                    onSelected: (_) => setState(() => _vencimiento = _minimaFecha.add(Duration(days: dias))),
+                  ),
+              ],
             ),
             if (_editando) ...[
               const SizedBox(height: 8),
@@ -206,24 +216,33 @@ class _PrestamoFormScreenState extends State<PrestamoFormScreen> {
               ),
             ],
             const SizedBox(height: 16),
-            Card(
-              color: tema.colorScheme.secondaryContainer,
-              child: ListTile(
-                leading: const Icon(Icons.payments_outlined),
-                title: const Text('Total a cobrar'),
-                subtitle: const Text('Monto + interés'),
-                trailing: Text(soles(_totalVistaPrevia),
-                    style: tema.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              decoration: BoxDecoration(color: Paleta.tinta, borderRadius: BorderRadius.circular(14)),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Total a cobrar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                        Text('Monto + interés', style: TextStyle(color: Color(0xFFB8C3DC), fontSize: 12.5)),
+                      ],
+                    ),
+                  ),
+                  Text(soles(_totalVistaPrevia),
+                      style: tema.textTheme.titleLarge?.copyWith(
+                          color: Colors.white, fontWeight: FontWeight.w700, fontFeatures: cifras)),
+                ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             FilledButton.icon(
               onPressed: _guardando ? null : _guardar,
               icon: _guardando
                   ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.save_outlined),
               label: Text(_editando ? 'Guardar cambios' : 'Registrar préstamo'),
-              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
             ),
           ],
         ),

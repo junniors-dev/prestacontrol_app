@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/servidor.dart';
+import '../config/tema.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import 'prestamos_screen.dart';
@@ -79,11 +80,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // El logo ya incluye el nombre PrestaL&J
-                    Image.asset('assets/logo.png', height: 190, semanticLabel: 'PrestaL&J'),
+                    Image.asset('assets/logo.png', height: 150, semanticLabel: 'PrestaL&J'),
                     const SizedBox(height: 12),
                     Text('Controla a quién le prestaste y cuándo cobrar',
-                        textAlign: TextAlign.center, style: tema.textTheme.bodyMedium),
-                    const SizedBox(height: 28),
+                        textAlign: TextAlign.center,
+                        style: tema.textTheme.bodyMedium?.copyWith(color: Paleta.suave)),
+                    const SizedBox(height: 32),
                     if (_error != null) ...[
                       _MensajeError(texto: _error!),
                       const SizedBox(height: 16),
@@ -96,7 +98,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Email',
                         prefixIcon: Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(),
                       ),
                       validator: (v) {
                         final t = v?.trim() ?? '';
@@ -115,7 +116,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: InputDecoration(
                         labelText: 'Contraseña',
                         prefixIcon: const Icon(Icons.lock_outline),
-                        border: const OutlineInputBorder(),
                         suffixIcon: IconButton(
                           tooltip: _ocultar ? 'Mostrar' : 'Ocultar',
                           icon: Icon(_ocultar ? Icons.visibility : Icons.visibility_off),
@@ -131,7 +131,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                           : const Icon(Icons.login),
                       label: Text(_cargando ? 'Ingresando…' : 'Iniciar sesión'),
-                      style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
                     ),
                     const SizedBox(height: 8),
                     TextButton(
@@ -141,15 +140,35 @@ class _LoginScreenState extends State<LoginScreen> {
                               .push(MaterialPageRoute(builder: (_) => const RegistroScreen())),
                       child: const Text('¿No tienes cuenta? Regístrate'),
                     ),
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: _cargando ? null : _elegirServidor,
-                      icon: const Icon(Icons.dns_outlined),
-                      label: Text('Servidor: ${ServidorConfig.nombre(ServidorConfig.modo)}'),
-                    ),
+                    const SizedBox(height: 28),
+                    const Divider(),
                     const SizedBox(height: 4),
-                    Text(ServidorConfig.baseUrl,
-                        textAlign: TextAlign.center, style: tema.textTheme.bodySmall),
+                    // Servidor de la API: discreto, se cambia pocas veces
+                    InkWell(
+                      onTap: _cargando ? null : _elegirServidor,
+                      borderRadius: BorderRadius.circular(10),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.dns_outlined, size: 20, color: Paleta.suave),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Servidor: ${ServidorConfig.nombre(ServidorConfig.modo)}',
+                                      style: const TextStyle(fontWeight: FontWeight.w600, color: Paleta.tinta)),
+                                  Text(ServidorConfig.baseUrl,
+                                      style: const TextStyle(fontSize: 12, color: Paleta.suave)),
+                                ],
+                              ),
+                            ),
+                            const Text('Cambiar', style: TextStyle(color: Paleta.azul, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

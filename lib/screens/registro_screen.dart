@@ -80,7 +80,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Nombre completo',
                     prefixIcon: Icon(Icons.person_outline),
-                    border: OutlineInputBorder(),
                   ),
                   validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa tu nombre' : null,
                 ),
@@ -92,7 +91,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     prefixIcon: Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(),
                   ),
                   validator: (v) {
                     final t = v?.trim() ?? '';
@@ -110,7 +108,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                     labelText: 'Contraseña',
                     helperText: 'Entre 6 y 72 caracteres',
                     prefixIcon: const Icon(Icons.lock_outline),
-                    border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: Icon(_ocultar ? Icons.visibility : Icons.visibility_off),
                       onPressed: () => setState(() => _ocultar = !_ocultar),
@@ -132,7 +129,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Repite la contraseña',
                     prefixIcon: Icon(Icons.lock_reset),
-                    border: OutlineInputBorder(),
                   ),
                   validator: (v) => v != _password.text ? 'Las contraseñas no coinciden' : null,
                 ),

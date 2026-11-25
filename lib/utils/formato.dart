@@ -21,3 +21,8 @@ String fechaIso(DateTime d) =>
     '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
 DateTime soloFecha(DateTime d) => DateTime(d.year, d.month, d.day);
+
+const _meses = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SET', 'OCT', 'NOV', 'DIC'];
+
+/// NOV, DIC… (abreviaturas usadas en Perú)
+String mesCorto(DateTime d) => _meses[d.month - 1];

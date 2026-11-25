@@ -100,7 +100,6 @@ class _ServidorScreenState extends State<ServidorScreen> {
                 labelText: 'IP de la PC',
                 suffixText: ':${ServidorConfig.puerto}',
                 prefixIcon: Icon(Icons.computer),
-                border: OutlineInputBorder(),
               ),
               onChanged: (_) => setState(() => _resultado = null),
             ),
