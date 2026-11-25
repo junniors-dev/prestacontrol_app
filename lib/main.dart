@@ -31,12 +31,13 @@ class PrestaControlApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'PrestaControl',
+      title: 'PrestaL&J',
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
       scaffoldMessengerKey: mensajeroKey,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F766E)),
+        // Azul del logo PrestaL&J
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1A7FC1)),
         useMaterial3: true,
       ),
       locale: const Locale('es', 'PE'),

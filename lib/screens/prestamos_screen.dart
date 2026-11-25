@@ -158,7 +158,7 @@ class _PrestamosScreenState extends State<PrestamosScreen> {
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('PrestaControl'),
+              const Text('PrestaL&J', style: TextStyle(fontWeight: FontWeight.bold)),
               Text(
                 '${widget.sesion.nombre} · ${ServidorConfig.nombre(ServidorConfig.modo)}',
                 style: Theme.of(context).textTheme.bodySmall,

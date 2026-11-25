@@ -78,11 +78,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(Icons.account_balance_wallet_rounded, size: 64, color: tema.colorScheme.primary),
+                    // El logo ya incluye el nombre PrestaL&J
+                    Image.asset('assets/logo.png', height: 190, semanticLabel: 'PrestaL&J'),
                     const SizedBox(height: 12),
-                    Text('PrestaControl',
-                        textAlign: TextAlign.center,
-                        style: tema.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
                     Text('Controla a quién le prestaste y cuándo cobrar',
                         textAlign: TextAlign.center, style: tema.textTheme.bodyMedium),
                     const SizedBox(height: 28),

@@ -1,6 +1,8 @@
-# PrestaControl (app Flutter)
+# PrestaControl (app Flutter) — marca PrestaL&J
 
-App móvil para que un prestamista se registre, inicie sesión, registre el dinero que presta a sus clientes y marque
+<p align="center"><img src="assets/logo.png" alt="PrestaL&J" width="180"></p>
+
+App móvil (se muestra como **PrestaL&J**, por Lorena y Junniors) para que un prestamista se registre, inicie sesión, registre el dinero que presta a sus clientes y marque
 los préstamos cobrados. Consume la API REST protegida con JWT del repositorio `prestamoservice`.
 
 **Integrantes**

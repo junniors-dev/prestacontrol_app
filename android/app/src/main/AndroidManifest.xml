@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- usesCleartextTraffic: permite http:// para la API local (USB o Wi-Fi); Render usa https -->
     <application
-        android:label="PrestaControl"
+        android:label="PrestaL&amp;J"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
